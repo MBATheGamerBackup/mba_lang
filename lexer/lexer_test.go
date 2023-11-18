@@ -1,8 +1,9 @@
-package lexer
+package lexer_test
 
 import (
 	"testing"
 
+	"github.com/MBATheGamer/mba_lang/lexer"
 	"github.com/MBATheGamer/mba_lang/token"
 )
 
@@ -13,23 +14,19 @@ type TestToken struct {
 
 var inputs = map[string]string{
 	"first-test": `=+(){},;`,
+	"second-test": `
+let five = 5;
+let ten = 10;
+let add = fn(x, y) {
+	x + y;
+};
+
+let result = fn add(five, ten);
+	`,
 }
 
-func TestNextToken(t *testing.T) {
-	var input = inputs["first-test"]
-
-	var tests = []TestToken{
-		{token.ASSIGN, "="},
-		{token.PLUS, "+"},
-		{token.LPAREN, "("},
-		{token.RPAREN, ")"},
-		{token.LBRACE, "{"},
-		{token.RBRACE, "}"},
-		{token.COMMA, ","},
-		{token.SEMICOLON, ";"},
-	}
-
-	var l = New(input)
+func testInput(input string, tests []TestToken, t *testing.T) {
+	var l = lexer.New(input)
 
 	for i, tt := range tests {
 		var tok = l.NextToken()
@@ -46,4 +43,68 @@ func TestNextToken(t *testing.T) {
 			)
 		}
 	}
+}
+
+func TestFirstNextToken(t *testing.T) {
+	var tests = []TestToken{
+		{token.ASSIGN, "="},
+		{token.PLUS, "+"},
+		{token.LPAREN, "("},
+		{token.RPAREN, ")"},
+		{token.LBRACE, "{"},
+		{token.RBRACE, "}"},
+		{token.COMMA, ","},
+		{token.SEMICOLON, ";"},
+	}
+
+	testInput(inputs["first-test"], tests, t)
+}
+
+func TestSecondNextToken(t *testing.T) {
+	var tests = []TestToken{
+		{token.LET, "let"},
+		{token.IDENT, "five"},
+		{token.ASSIGN, "="},
+		{token.INT, "5"},
+		{token.SEMICOLON, ";"},
+
+		{token.LET, "let"},
+		{token.IDENT, "ten"},
+		{token.ASSIGN, "="},
+		{token.INT, "10"},
+		{token.SEMICOLON, ";"},
+
+		{token.LET, "let"},
+		{token.IDENT, "add"},
+		{token.ASSIGN, "="},
+		{token.FUNCTION, "fn"},
+		{token.LPAREN, "("},
+		{token.IDENT, "x"},
+		{token.COMMA, ","},
+		{token.IDENT, "y"},
+		{token.RPAREN, ")"},
+		{token.LBRACE, "{"},
+
+		{token.IDENT, "x"},
+		{token.PLUS, "+"},
+		{token.IDENT, "y"},
+		{token.SEMICOLON, ";"},
+
+		{token.RBRACE, "}"},
+		{token.SEMICOLON, ";"},
+
+		{token.LET, "let"},
+		{token.IDENT, "result"},
+		{token.ASSIGN, "="},
+		{token.FUNCTION, "fn"},
+		{token.IDENT, "add"},
+		{token.LPAREN, "("},
+		{token.IDENT, "five"},
+		{token.COMMA, ","},
+		{token.IDENT, "ten"},
+		{token.RPAREN, ")"},
+		{token.SEMICOLON, ";"},
+	}
+
+	testInput(inputs["second-test"], tests, t)
 }
