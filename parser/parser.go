@@ -2,6 +2,7 @@ package parser
 
 import (
 	"fmt"
+	"strconv"
 
 	"github.com/MBATheGamer/mba_lang/ast"
 	"github.com/MBATheGamer/mba_lang/lexer"
@@ -57,11 +58,12 @@ func New(l *lexer.Lexer) *Parser {
 		errors: []string{},
 	}
 
-	p.nextToken()
-	p.nextToken()
-
 	p.prefixParseFns = make(map[token.TokenType]prefixParseFn)
 	p.registerPrefix(token.IDENT, p.parseIdentifier)
+	p.registerPrefix(token.INT, p.parseIntegerLiteral)
+
+	p.nextToken()
+	p.nextToken()
 
 	return p
 }
@@ -150,6 +152,25 @@ func (p *Parser) parseExpressionStatement() *ast.ExpressionStatement {
 	return statement
 }
 
+func (p *Parser) parseIntegerLiteral() ast.Expression {
+	var literal = &ast.IntegerLiteral{Token: p.curToken}
+
+	var value, err = strconv.ParseInt(p.curToken.Literal, 0, 64)
+
+	if err != nil {
+		var msg = fmt.Sprintf(
+			"could not parse %q as integer",
+			p.curToken.Literal,
+		)
+		p.errors = append(p.errors, msg)
+		return nil
+	}
+
+	literal.Value = value
+
+	return literal
+}
+
 func (p *Parser) parseStatement() ast.Statement {
 	switch p.curToken.Type {
 	case token.LET:
@@ -168,9 +189,7 @@ func (p *Parser) ParseProgram() *ast.Program {
 
 	for p.curToken.Type != token.EOF {
 		var statement = p.parseStatement()
-		if statement != nil {
-			program.Statements = append(program.Statements, statement)
-		}
+		program.Statements = append(program.Statements, statement)
 		p.nextToken()
 	}
 	return program

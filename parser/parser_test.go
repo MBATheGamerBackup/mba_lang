@@ -32,10 +32,16 @@ func checkParserErrors(t *testing.T, p *parser.Parser) {
 		return
 	}
 
-	t.Errorf("parser has %derrors.", len(errors))
+	t.Errorf(
+		"parser has %derrors.",
+		len(errors),
+	)
 
 	for _, msg := range errors {
-		t.Errorf("parser error: %q", msg)
+		t.Errorf(
+			"parser error: %q",
+			msg,
+		)
 	}
 	t.FailNow()
 }
@@ -50,7 +56,8 @@ func testingLetStatement(input string, t *testing.T) {
 		t.Fatal("ParseProgram() returned nil")
 	}
 	if len(program.Statements) != 3 {
-		t.Fatalf("program.Statements does not contain 3 statements. got=%d",
+		t.Fatalf(
+			"program.Statements does not contain 3 statements. got=%d",
 			len(program.Statements),
 		)
 	}
@@ -79,7 +86,8 @@ func TestSecondLetStatement(t *testing.T) {
 
 func testLetStatement(t *testing.T, s ast.Statement, name string) bool {
 	if s.TokenLiteral() != "let" {
-		t.Errorf("s.TokenLiteral not 'let'. got=%q",
+		t.Errorf(
+			"s.TokenLiteral not 'let'. got=%q",
 			s.TokenLiteral(),
 		)
 		return false
@@ -88,14 +96,16 @@ func testLetStatement(t *testing.T, s ast.Statement, name string) bool {
 	var letStatement, ok = s.(*ast.LetStatement)
 
 	if !ok {
-		t.Errorf("s not *ast.LetStatement. got=%T",
+		t.Errorf(
+			"s not *ast.LetStatement. got=%T",
 			s,
 		)
 		return false
 	}
 
 	if letStatement.Name.Value != name {
-		t.Errorf("letStatement.Name.Value not '%s'. got=%s",
+		t.Errorf(
+			"letStatement.Name.Value not '%s'. got=%s",
 			name,
 			letStatement.Name.Value,
 		)
@@ -103,7 +113,8 @@ func testLetStatement(t *testing.T, s ast.Statement, name string) bool {
 	}
 
 	if letStatement.Name.TokenLiteral() != name {
-		t.Errorf("s.Name not '%s'. got=%s",
+		t.Errorf(
+			"s.Name not '%s'. got=%s",
 			name,
 			letStatement.Name.Value,
 		)
@@ -127,7 +138,8 @@ return 993322;
 	checkParserErrors(t, p)
 
 	if len(program.Statements) != 3 {
-		t.Fatalf("program.Statements does not contain 3 statements. got=%d",
+		t.Fatalf(
+			"program.Statements does not contain 3 statements. got=%d",
 			len(program.Statements),
 		)
 	}
@@ -136,13 +148,15 @@ return 993322;
 		var returnStatement, ok = statement.(*ast.ReturnStatement)
 
 		if !ok {
-			t.Errorf("statement not *ast.ReturnStatement, got=%T",
+			t.Errorf(
+				"statement not *ast.ReturnStatement, got=%T",
 				statement,
 			)
 			continue
 		}
 		if returnStatement.TokenLiteral() != "return" {
-			t.Errorf("returnStatement.TokenLiteral not 'return', got=%q",
+			t.Errorf(
+				"returnStatement.TokenLiteral not 'return', got=%q",
 				returnStatement.TokenLiteral(),
 			)
 		}
@@ -158,32 +172,93 @@ func TestIdentifierExpression(t *testing.T) {
 	checkParserErrors(t, p)
 
 	if len(program.Statements) != 1 {
-		t.Fatalf("program has not enough statements. got=%d", len(program.Statements))
+		t.Fatalf(
+			"program has not enough statements. got=%d",
+			len(program.Statements),
+		)
 	}
 
 	var statement, ok = program.Statements[0].(*ast.ExpressionStatement)
 	if !ok {
-		t.Fatalf("program.Statements[0] is not ast.ExpressionStatement. got=%T", program.Statements[0])
+		t.Fatalf(
+			"program.Statements[0] is not ast.ExpressionStatement. got=%T",
+			program.Statements[0],
+		)
 	}
 
 	var identifier *ast.Identifier
 	identifier, ok = statement.Expression.(*ast.Identifier)
 
 	if !ok {
-		t.Fatalf("expression is not *ast.Identifier. got=%T", statement.Expression)
+		t.Fatalf(
+			"expression is not *ast.Identifier. got=%T",
+			statement.Expression,
+		)
 	}
 
 	if identifier.Value != "foobar" {
-		t.Errorf("identifier.Value is not %s. got=%s",
+		t.Errorf(
+			"identifier.Value is not %s. got=%s",
 			"foobar",
 			identifier.Value,
 		)
 	}
 
 	if identifier.TokenLiteral() != "foobar" {
-		t.Errorf("identifier.TokenLiteral() is not %s. got=%s",
+		t.Errorf(
+			"identifier.TokenLiteral() is not %s. got=%s",
 			"foobar",
 			identifier.TokenLiteral(),
+		)
+	}
+}
+
+func TestIntegerLiteralExpression(t *testing.T) {
+	var input = "5;"
+
+	var l = lexer.New(input)
+	var p = parser.New(l)
+	var program = p.ParseProgram()
+	checkParserErrors(t, p)
+
+	if len(program.Statements) != 1 {
+		t.Fatalf(
+			"program has not enough statements. got=%d",
+			len(program.Statements),
+		)
+	}
+
+	var statement, ok = program.Statements[0].(*ast.ExpressionStatement)
+	if !ok {
+		t.Fatalf(
+			"program.Statements[0] is not ast.ExpressionStatement. got=%T",
+			program.Statements[0],
+		)
+	}
+
+	var literal *ast.IntegerLiteral
+	literal, ok = statement.Expression.(*ast.IntegerLiteral)
+
+	if !ok {
+		t.Fatalf(
+			"expression not *ast.IntegerLiteral. got=%T",
+			statement.Expression,
+		)
+	}
+
+	if literal.Value != 5 {
+		t.Errorf(
+			"literal.Value not %d. got=%d",
+			5,
+			literal.Value,
+		)
+	}
+
+	if literal.TokenLiteral() != "5" {
+		t.Errorf(
+			"literal.TokenLiteral not %s. got=%s",
+			"5",
+			literal.TokenLiteral(),
 		)
 	}
 }
