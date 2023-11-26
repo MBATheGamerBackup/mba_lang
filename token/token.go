@@ -18,7 +18,7 @@ const (
 
 	// Operators
 	ASSIGN   TokenType = "ASSIGN"
-	PLUS     TokenType = "PLUS"
+	PLUS     TokenType = "+"
 	BANG     TokenType = "!"
 	MINUS    TokenType = "-"
 	ASTERISK TokenType = "*"
