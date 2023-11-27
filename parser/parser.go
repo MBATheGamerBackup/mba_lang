@@ -64,6 +64,7 @@ func (p *Parser) parseIdentifier() ast.Expression {
 }
 
 func (p *Parser) parsePrefixExpression() ast.Expression {
+	defer untrace(trace("parsePrefixExpression"))
 	var expression = &ast.PrefixExpression{
 		Token:    p.curToken,
 		Operator: p.curToken.Literal,
@@ -77,6 +78,7 @@ func (p *Parser) parsePrefixExpression() ast.Expression {
 }
 
 func (p *Parser) parseInfixExpression(left ast.Expression) ast.Expression {
+	defer untrace(trace("parseInfixExpression"))
 	var expression = &ast.InfixExpression{
 		Token:    p.curToken,
 		Operator: p.curToken.Literal,
@@ -85,7 +87,12 @@ func (p *Parser) parseInfixExpression(left ast.Expression) ast.Expression {
 
 	var precedence = p.curPrecedence()
 	p.nextToken()
+
+	// if expression.Operator == "+" {
+	// 	expression.Right = p.parseExpression(precedence - 1)
+	// } else {
 	expression.Right = p.parseExpression(precedence)
+	// }
 
 	return expression
 }
@@ -202,6 +209,7 @@ func (p *Parser) noPrefixParseFnError(t token.TokenType) {
 }
 
 func (p *Parser) parseExpression(precedence int) ast.Expression {
+	defer untrace(trace("parseExpression"))
 	var prefix = p.prefixParseFns[p.curToken.Type]
 
 	if prefix == nil {
@@ -227,6 +235,7 @@ func (p *Parser) parseExpression(precedence int) ast.Expression {
 }
 
 func (p *Parser) parseExpressionStatement() *ast.ExpressionStatement {
+	defer untrace(trace("parseExpressionStatement"))
 	var statement = &ast.ExpressionStatement{Token: p.curToken}
 
 	statement.Expression = p.parseExpression(LOWEST)
@@ -239,6 +248,7 @@ func (p *Parser) parseExpressionStatement() *ast.ExpressionStatement {
 }
 
 func (p *Parser) parseIntegerLiteral() ast.Expression {
+	defer untrace(trace("parseIntegerLiteral"))
 	var literal = &ast.IntegerLiteral{Token: p.curToken}
 
 	var value, err = strconv.ParseInt(p.curToken.Literal, 0, 64)
