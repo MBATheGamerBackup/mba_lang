@@ -14,16 +14,16 @@ type ExpectedIdentifier struct {
 }
 
 type PrefixTest struct {
-	input        string
-	operator     string
-	integerValue int64
+	input      string
+	operator   string
+	rightValue interface{}
 }
 
 type InfixTest struct {
 	input      string
-	leftValue  int64
+	leftValue  interface{}
 	operator   string
-	rightValue int64
+	rightValue interface{}
 }
 
 type OperatorTest struct {
@@ -319,10 +319,12 @@ func testIntegerLiteral(t *testing.T, il ast.Expression, value int64) bool {
 	return true
 }
 
-func TestPrefixExpression(t *testing.T) {
+func TestParsePrefixExpression(t *testing.T) {
 	var prefixTests = []PrefixTest{
 		{"!5;", "!", 5},
 		{"-15;", "-", 15},
+		{"!true;", "!", true},
+		{"!false;", "!", false},
 	}
 
 	for _, tt := range prefixTests {
@@ -365,7 +367,7 @@ func TestPrefixExpression(t *testing.T) {
 			)
 		}
 
-		if !testIntegerLiteral(t, expression.Right, tt.integerValue) {
+		if !testLiteralExpression(t, expression.Right, tt.rightValue) {
 			return
 		}
 	}
@@ -381,6 +383,9 @@ func TestParseInfixExpression(t *testing.T) {
 		{"5 < 5;", 5, "<", 5},
 		{"5 == 5;", 5, "==", 5},
 		{"5 != 5;", 5, "!=", 5},
+		{"true == true", true, "==", true},
+		{"true != false", true, "!=", false},
+		{"false == false", false, "==", false},
 	}
 
 	for _, tt := range infixTests {
@@ -405,26 +410,34 @@ func TestParseInfixExpression(t *testing.T) {
 			)
 		}
 
-		var expression *ast.InfixExpression
-		expression, ok = statement.Expression.(*ast.InfixExpression)
-		if !ok {
-			t.Fatalf(
-				"expression is not ast.InfixExpression. got=%T",
-				statement.Expression,
-			)
-		}
-
-		if expression.Operator != tt.operator {
-			t.Fatalf(
-				"expression.Operator is not '%s'. got=%s",
-				tt.operator,
-				expression.Operator,
-			)
-		}
-
-		if !testIntegerLiteral(t, expression.Right, tt.rightValue) {
+		if !testInfixExpression(t, statement.Expression, tt.leftValue, tt.operator, tt.rightValue) {
 			return
 		}
+
+		// var expression *ast.InfixExpression
+		// expression, ok = statement.Expression.(*ast.InfixExpression)
+		// if !ok {
+		// 	t.Fatalf(
+		// 		"expression is not ast.InfixExpression. got=%T",
+		// 		statement.Expression,
+		// 	)
+		// }
+
+		// if expression.Operator != tt.operator {
+		// 	t.Fatalf(
+		// 		"expression.Operator is not '%s'. got=%s",
+		// 		tt.operator,
+		// 		expression.Operator,
+		// 	)
+		// }
+
+		// if !testLiteralExpression(t, expression.Left, tt.leftValue) {
+		// 	return
+		// }
+
+		// if !testLiteralExpression(t, expression.Right, tt.rightValue) {
+		// 	return
+		// }
 	}
 }
 
@@ -442,6 +455,10 @@ func TestOperatorPrecedenceParsing(t *testing.T) {
 		{"5 > 4 == 3 < 4", "((5 > 4) == (3 < 4))"},
 		{"5 > 4 != 3 < 4", "((5 > 4) != (3 < 4))"},
 		{"3 + 4 * 5 == 3 * 1 + 4 * 5", "((3 + (4 * 5)) == ((3 * 1) + (4 * 5)))"},
+		{"true", "true"},
+		{"false", "false"},
+		{"3 > 5 == false", "((3 > 5) == false)"},
+		{"3 < 5 == true", "((3 < 5) == true)"},
 	}
 
 	for _, tt := range tests {
@@ -490,6 +507,38 @@ func testIdentifier(t *testing.T, expression ast.Expression, value string) bool 
 	return true
 }
 
+func testBooleanExpression(t *testing.T, expression ast.Expression, value bool) bool {
+	var boolean, ok = expression.(*ast.Boolean)
+
+	if !ok {
+		t.Errorf(
+			"expression not *ast.Boolean. got=%T",
+			expression,
+		)
+		return false
+	}
+
+	if boolean.Value != value {
+		t.Errorf(
+			"boolean.Value not %t. got=%t",
+			value,
+			boolean.Value,
+		)
+		return false
+	}
+
+	if boolean.TokenLiteral() != fmt.Sprintf("%t", value) {
+		t.Errorf(
+			"boolean.TokenLiteral not %t. got=%s",
+			value,
+			boolean.TokenLiteral(),
+		)
+		return false
+	}
+
+	return true
+}
+
 func testLiteralExpression(t *testing.T, expression ast.Expression, expected interface{}) bool {
 	switch v := expected.(type) {
 	case int:
@@ -498,6 +547,8 @@ func testLiteralExpression(t *testing.T, expression ast.Expression, expected int
 		return testIntegerLiteral(t, expression, v)
 	case string:
 		return testIdentifier(t, expression, v)
+	case bool:
+		return testBooleanExpression(t, expression, v)
 	}
 
 	t.Errorf(
