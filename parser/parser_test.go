@@ -413,31 +413,6 @@ func TestParseInfixExpression(t *testing.T) {
 		if !testInfixExpression(t, statement.Expression, tt.leftValue, tt.operator, tt.rightValue) {
 			return
 		}
-
-		// var expression *ast.InfixExpression
-		// expression, ok = statement.Expression.(*ast.InfixExpression)
-		// if !ok {
-		// 	t.Fatalf(
-		// 		"expression is not ast.InfixExpression. got=%T",
-		// 		statement.Expression,
-		// 	)
-		// }
-
-		// if expression.Operator != tt.operator {
-		// 	t.Fatalf(
-		// 		"expression.Operator is not '%s'. got=%s",
-		// 		tt.operator,
-		// 		expression.Operator,
-		// 	)
-		// }
-
-		// if !testLiteralExpression(t, expression.Left, tt.leftValue) {
-		// 	return
-		// }
-
-		// if !testLiteralExpression(t, expression.Right, tt.rightValue) {
-		// 	return
-		// }
 	}
 }
 
@@ -459,6 +434,11 @@ func TestOperatorPrecedenceParsing(t *testing.T) {
 		{"false", "false"},
 		{"3 > 5 == false", "((3 > 5) == false)"},
 		{"3 < 5 == true", "((3 < 5) == true)"},
+		{"1 + (2 + 3) + 4", "((1 + (2 + 3)) + 4)"},
+		{"(5 + 5) * 2", "((5 + 5) * 2)"},
+		{"2 / (5 + 5)", "(2 / (5 + 5))"},
+		{"-(5 + 5)", "(-(5 + 5))"},
+		{"!(true == true)", "(!(true == true))"},
 	}
 
 	for _, tt := range tests {
