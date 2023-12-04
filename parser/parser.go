@@ -113,6 +113,24 @@ func (p *Parser) parseGroupedExpression() ast.Expression {
 	return expression
 }
 
+func (p *Parser) parseBlockStatement() *ast.BlockStatement {
+	var block = &ast.BlockStatement{Token: p.curToken}
+	block.Statements = []ast.Statement{}
+
+	p.nextToken()
+
+	if !p.curTokenIs(token.RBRACE) && !p.curTokenIs(token.EOF) {
+		var statement = p.parseStatement()
+
+		if statement != nil {
+			block.Statements = append(block.Statements, statement)
+		}
+		p.nextToken()
+	}
+
+	return block
+}
+
 func (p *Parser) parseIfExpression() ast.Expression {
 	var expression = &ast.IfExpression{Token: p.curToken}
 
@@ -132,7 +150,17 @@ func (p *Parser) parseIfExpression() ast.Expression {
 		return nil
 	}
 
-	expression.Condition = p.parseBlockStatement()
+	expression.Consequence = p.parseBlockStatement()
+
+	if p.peekTokenIs(token.ELSE) {
+		p.nextToken()
+
+		if !p.expectPeek(token.LBRACE) {
+			return nil
+		}
+
+		expression.Alternative = p.parseBlockStatement()
+	}
 
 	return expression
 }
