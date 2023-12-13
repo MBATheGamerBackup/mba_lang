@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io"
 
+	"github.com/MBATheGamer/mba_lang/evaluator"
 	"github.com/MBATheGamer/mba_lang/lexer"
 	"github.com/MBATheGamer/mba_lang/parser"
 )
@@ -15,7 +16,7 @@ func Start(in io.Reader, out io.Writer) {
 	var scanner = bufio.NewScanner(in)
 
 	for {
-		fmt.Printf(PROMPT)
+		fmt.Print(PROMPT)
 
 		var scanned = scanner.Scan()
 
@@ -34,8 +35,12 @@ func Start(in io.Reader, out io.Writer) {
 			continue
 		}
 
-		io.WriteString(out, program.String())
-		io.WriteString(out, "\n")
+		var evaluated = evaluator.Eval(program)
+
+		if evaluated != nil {
+			io.WriteString(out, evaluated.Inspect())
+			io.WriteString(out, "\n")
+		}
 	}
 }
 
