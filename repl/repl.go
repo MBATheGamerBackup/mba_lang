@@ -7,6 +7,7 @@ import (
 
 	"github.com/MBATheGamer/mba_lang/evaluator"
 	"github.com/MBATheGamer/mba_lang/lexer"
+	"github.com/MBATheGamer/mba_lang/object"
 	"github.com/MBATheGamer/mba_lang/parser"
 )
 
@@ -14,6 +15,7 @@ const PROMPT = ">> "
 
 func Start(in io.Reader, out io.Writer) {
 	var scanner = bufio.NewScanner(in)
+	var env = object.NewEnvironment()
 
 	for {
 		fmt.Print(PROMPT)
@@ -35,7 +37,7 @@ func Start(in io.Reader, out io.Writer) {
 			continue
 		}
 
-		var evaluated = evaluator.Eval(program)
+		var evaluated = evaluator.Eval(program, env)
 
 		if evaluated != nil {
 			io.WriteString(out, evaluated.Inspect())
